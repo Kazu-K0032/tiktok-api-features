@@ -98,20 +98,20 @@ TikTok API を使用してユーザープロフィール情報と投稿動画を
 #### 1. リポジトリのクローン
 
 ```bash
-git clone git@github.com:Kazu-K0032/TikTok-API-Features.git
+git clone <repository>
 cd tiktok-api-features
 ```
 
 #### 2. 仮想環境の作成とアクティベート
 
 ```bash
+# Linux(必要に応じて)
+sudo apt update && sudo apt install -y python3.12-venv
+
 # Python仮想環境を作成
-python -m venv venv
+python3 -m venv venv
 
 # 仮想環境をアクティベート
-# Windows
-venv\Scripts\activate
-# macOS/Linux
 source venv/bin/activate
 ```
 

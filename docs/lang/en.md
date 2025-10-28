@@ -105,13 +105,13 @@ cd tiktok-api-features
 #### 2. Create and Activate Virtual Environment
 
 ```bash
+# Linux (if needed)
+sudo apt update && sudo apt install -y python3.12-venv
+
 # Create Python virtual environment
-python -m venv venv
+python3 -m venv venv
 
 # Activate virtual environment
-# Windows
-venv\Scripts\activate
-# macOS/Linux
 source venv/bin/activate
 ```
 
@@ -126,11 +126,6 @@ pip install -r requirements.txt
 ```bash
 # Create .env file
 cp env.example .env
-
-# Edit .env file and add required settings
-# TIKTOK_CLIENT_KEY=your_client_key
-# TIKTOK_CLIENT_SECRET=your_client_secret
-# SECRET_KEY=your_secret_key
 ```
 
 #### 5. Run the Application
