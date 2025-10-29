@@ -17,6 +17,12 @@ TikTok API を使用してユーザープロフィール情報と投稿動画を
     <img src="./docs/images/dashboard_2.png" width="45%" />
 </div>
 
+### 動画詳細画面(/video/id)
+
+<div style="display: flex; column-gap:8px;">
+    <img src="./docs/images/video.png" width="45%" />
+</div>
+
 ### アップロード(/upload)
 
 <div style="display: flex; gap:8px; flex-wrap: wrap;">
