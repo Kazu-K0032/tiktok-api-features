@@ -1,14 +1,40 @@
 import logging
+import os
 from flask import Flask
 # from flask_session import Session  # 標準のFlaskセッションを使用
 from app.config import Config
 from app.views import Views
 from app.utils import setup_logging, cleanup_caches
 
+def setup_mock_data_if_needed():
+    """Vercelデプロイ時にモックデータをセットアップ"""
+    if os.getenv("IS_DEPLOY_SITE", "false").lower() == "true":
+        try:
+            from pathlib import Path
+            import subprocess
+
+            script_path = Path(__file__).parent / "scripts" / "setup_mock_data.py"
+            if script_path.exists():
+                result = subprocess.run(
+                    ["python", str(script_path)],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                if result.returncode == 0:
+                    logging.info("モックデータのセットアップが完了しました")
+                else:
+                    logging.warning(f"モックデータのセットアップで警告: {result.stderr}")
+        except Exception as e:
+            logging.warning(f"モックデータのセットアップスキップ: {e}")
+
 def create_app():
     """Flaskアプリケーションを作成"""
     # ログ設定を初期化
     setup_logging()
+
+    # Vercelデプロイ時にモックデータをセットアップ
+    setup_mock_data_if_needed()
 
     app = Flask(__name__, static_folder='static', template_folder='templates')
 

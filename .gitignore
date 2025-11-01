@@ -55,3 +55,6 @@ tmp/
 # 必要に応じて手動でコミットしてください
 mock_data/*.json
 !mock_data/.gitkeep
+
+# モックデータ環境変数設定ファイル（Base64エンコードされたデータを含む）
+mock_data_env_vars.txt
