@@ -212,24 +212,50 @@ class Views:
 
     def video_detail(self, video_id):
         """動画詳細表示"""
-        # 認証チェック
-        if not self.auth_service.is_authenticated():
-            self.logger.warning("動画詳細で認証されていません")
-            return redirect(url_for("index"))
+        # モックモードの場合は認証チェックをスキップ
+        if self.config.IS_DEPLOY_SITE:
+            # モックモードの場合、セッションにユーザーがなければ設定
+            if 'users' not in session or not session.get('users'):
+                from app.services.mock_data import get_mock_user_profile
+                mock_profile = get_mock_user_profile()
+                mock_user = {
+                    'open_id': mock_profile.get('open_id', 'mock_user_123'),
+                    'access_token': 'mock_access_token',
+                    'display_name': mock_profile.get('display_name', 'モックユーザー'),
+                    'username': mock_profile.get('username', 'mock_user'),
+                    'avatar_url': mock_profile.get('avatar_url', ''),
+                }
+                session['users'] = [mock_user]
+                session['current_user_open_id'] = mock_user['open_id']
+                session.modified = True
 
-        # 現在のユーザーを取得
-        current_user = self.user_manager.get_current_user()
-        if not current_user:
-            self.logger.warning("動画詳細で現在のユーザーが見つかりません")
-            return redirect(url_for("index"))
+            # 現在のユーザーを取得
+            current_user = self.user_manager.get_current_user()
+            if not current_user:
+                self.logger.warning("動画詳細で現在のユーザーが見つかりません")
+                return redirect(url_for("index"))
 
-        token = current_user["access_token"]
+            token = current_user["access_token"]
+            # モックモードではトークン検証をスキップ
+        else:
+            # 通常モード: 認証チェック
+            if not self.auth_service.is_authenticated():
+                self.logger.warning("動画詳細で認証されていません")
+                return redirect(url_for("index"))
 
-        # トークンの有効性チェック
-        if not validate_token(token):
-            self.logger.warning("動画詳細で無効なアクセストークン形式")
-            self.user_manager.remove_user(current_user["open_id"])
-            return redirect(url_for("index"))
+            # 現在のユーザーを取得
+            current_user = self.user_manager.get_current_user()
+            if not current_user:
+                self.logger.warning("動画詳細で現在のユーザーが見つかりません")
+                return redirect(url_for("index"))
+
+            token = current_user["access_token"]
+
+            # トークンの有効性チェック
+            if not validate_token(token):
+                self.logger.warning("動画詳細で無効なアクセストークン形式")
+                self.user_manager.remove_user(current_user["open_id"])
+                return redirect(url_for("index"))
 
         try:
             details = get_video_details(token, video_id)

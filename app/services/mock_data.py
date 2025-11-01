@@ -125,14 +125,45 @@ def get_mock_video_detail(video_id: str) -> Dict[str, Any]:
     if video_details_json:
         try:
             video_details = json.loads(video_details_json)
+            # 動画IDが直接存在するか確認
             if video_id in video_details:
                 try:
                     decoded_data = base64.b64decode(video_details[video_id]).decode('utf-8')
                     return json.loads(decoded_data)
                 except Exception as e:
                     print(f"⚠️ 動画詳細 {video_id} の復号エラー: {e}")
+            else:
+                # 動画IDが見つからない場合、利用可能なIDをログに出力（デバッグ用）
+                available_ids = list(video_details.keys())[:5]  # 最初の5つだけ
+                print(f"⚠️ 動画ID {video_id} が環境変数に見つかりません。利用可能なID: {available_ids}")
         except Exception as e:
             print(f"⚠️ VIDEO_DETAILS_B64 の解析エラー: {e}")
+
+    # 動画リストから該当動画を探す（フォールバック）
+    video_list_data = load_json_file("video_list.json")
+    if video_list_data and "data" in video_list_data and "videos" in video_list_data["data"]:
+        for video in video_list_data["data"]["videos"]:
+            if video.get("id") == video_id:
+                # 動画リストの基本情報を使って詳細レスポンスを構築
+                current_time = int(datetime.now().timestamp())
+                return {
+                    "data": {
+                        "videos": [{
+                            "id": video_id,
+                            "title": video.get("title", f"動画 {video_id}"),
+                            "duration": video.get("duration", 30),
+                            "view_count": video.get("view_count", 0),
+                            "like_count": video.get("like_count", 0),
+                            "comment_count": video.get("comment_count", 0),
+                            "share_count": video.get("share_count", 0),
+                            "embed_link": video.get("embed_link", f"https://www.tiktok.com/embed/{video_id}"),
+                            "cover_image_url": video.get("cover_image_url", "https://via.placeholder.com/640x360"),
+                            "create_time": video.get("create_time", current_time - 86400),
+                            "height": video.get("height", 720),
+                            "width": video.get("width", 1280)
+                        }]
+                    }
+                }
 
     # 汎用的なファイルを探す
     data = load_json_file("video_detail.json")
