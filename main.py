@@ -156,6 +156,11 @@ def create_app():
         def api_upload_draft():
             return views.api_upload_draft()
 
+        # ファビコン用のルート（ブラウザが自動的に探す）
+        @app.route("/favicon.ico")
+        def favicon():
+            return app.send_static_file("images/favicon.svg")
+
         return app
 
     except Exception as e:

@@ -1,279 +1,261 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}TikTok API Dashboard{% endblock %}</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/variables.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/base.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/responsive.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/header.css') }}"
-    />
-    {% block extra_css %}{% endblock %}
-  </head>
-  <body>
-    <!-- ヘッダー -->
-    {% if users %}
-    <header class="app-header">
-      <div class="header-container">
-        <div class="header-title">
-          <h1>
-            <a href="{{ url_for('dashboard') }}" class="header-link"
-              >TikTok API Dashboard</a
-            >
-          </h1>
-        </div>
-        <div class="user-selector">
-          <div class="user-list">
-            {% for user in users %}
-            <div
-              class="user-item {% if current_user and user.open_id == current_user.open_id %}active{% endif %}"
-              data-open-id="{{ user.open_id }}"
-              onclick="switchUser('{{ user.open_id }}')"
-            >
-              <img
-                src="{{ user.avatar_url or '/static/images/default-avatar.svg' }}"
-                alt="{{ user.display_name }}"
-                class="user-avatar"
-                onerror="this.src='/static/images/default-avatar.svg'"
-              />
-              <span class="user-name">
-                {{ user.display_name }} {% if user.username %}
-                <span class="user-username">@{{ user.username }}</span>
-                {% endif %}
-              </span>
-              <button
-                class="remove-user-btn"
-                onclick="event.stopPropagation(); removeUser('{{ user.open_id }}')"
-                title="ユーザーを削除"
-              >
-                ×
-              </button>
-              <div class="tooltip">
-                {{ user.session_info.message }}<br />
-                期限: {{ user.session_info.expires_at }}
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          <div class="add-user-section">
-            <button class="add-user-btn" onclick="addNewUser()">
-              + 新しいユーザーを追加
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}TikTok API Dashboard{% endblock %}</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.svg') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}" />
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <!-- ヘッダー -->
+  {% if users %}
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-title">
+        <h1>
+          <a href="{{ url_for('dashboard') }}" class="header-link">TikTok API Dashboard</a>
+        </h1>
+      </div>
+      <div class="user-selector">
+        <div class="user-list">
+          {% for user in users %}
+          <div class="user-item {% if current_user and user.open_id == current_user.open_id %}active{% endif %}"
+            data-open-id="{{ user.open_id }}" onclick="switchUser('{{ user.open_id }}')">
+            <img src="{{ user.avatar_url or '/static/images/default-avatar.svg' }}" alt="{{ user.display_name }}"
+              class="user-avatar" onerror="this.src='/static/images/default-avatar.svg'" />
+            <span class="user-name">
+              {{ user.display_name }} {% if user.username %}
+              <span class="user-username">@{{ user.username }}</span>
+              {% endif %}
+            </span>
+            <button class="remove-user-btn" onclick="event.stopPropagation(); removeUser('{{ user.open_id }}')"
+              title="ユーザーを削除">
+              ×
             </button>
+            <div class="tooltip">
+              {{ user.session_info.message }}<br />
+              期限: {{ user.session_info.expires_at }}
+            </div>
           </div>
+          {% endfor %}
         </div>
-        <div class="header-actions">
-          <button class="logout-btn" onclick="logout()">ログアウト</button>
+        <div class="add-user-section">
+          <button class="add-user-btn" onclick="addNewUser()">
+            + 新しいユーザーを追加
+          </button>
         </div>
       </div>
-    </header>
-    {% endif %}
+      <div class="header-actions">
+        <button class="logout-btn" onclick="logout()">ログアウト</button>
+      </div>
+    </div>
+  </header>
+  {% endif %}
 
-    <div class="container">{% block content %}{% endblock %}</div>
+  <div class="container">{% block content %}{% endblock %}</div>
 
-    <!-- SPA用のJavaScript -->
-    {% if users %}
-    <script>
-      // ツールチップの位置を動的に調整
-      function adjustTooltipPosition() {
-        const userItems = document.querySelectorAll(".user-item");
+  <!-- SPA用のJavaScript -->
+  {% if users %}
+  <script>
+    // ツールチップの位置を動的に調整
+    function adjustTooltipPosition() {
+      const userItems = document.querySelectorAll(".user-item");
 
-        userItems.forEach((item) => {
-          const tooltip = item.querySelector(".tooltip");
-          if (!tooltip) return;
+      userItems.forEach((item) => {
+        const tooltip = item.querySelector(".tooltip");
+        if (!tooltip) return;
 
-          const itemRect = item.getBoundingClientRect();
-          const tooltipRect = tooltip.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
+        const itemRect = item.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-          // デフォルトの位置をリセット
-          tooltip.style.left = "";
-          tooltip.style.right = "";
-          tooltip.style.top = "";
-          tooltip.style.bottom = "";
-          tooltip.style.transform = "";
+        // デフォルトの位置をリセット
+        tooltip.style.left = "";
+        tooltip.style.right = "";
+        tooltip.style.top = "";
+        tooltip.style.bottom = "";
+        tooltip.style.transform = "";
 
-          // 画面の右端に近い場合
-          if (itemRect.left + tooltipRect.width > viewportWidth - 20) {
-            tooltip.style.left = "auto";
-            tooltip.style.right = "0";
-            tooltip.style.transform = "translateY(-5px)";
+        // 画面の右端に近い場合
+        if (itemRect.left + tooltipRect.width > viewportWidth - 20) {
+          tooltip.style.left = "auto";
+          tooltip.style.right = "0";
+          tooltip.style.transform = "translateY(-5px)";
 
-            // 矢印の位置も調整
-            const arrow = tooltip.querySelector("::after");
-            if (arrow) {
-              tooltip.style.setProperty("--arrow-left", "auto");
-              tooltip.style.setProperty("--arrow-right", "20px");
-              tooltip.style.setProperty("--arrow-transform", "none");
-            }
+          // 矢印の位置も調整
+          const arrow = tooltip.querySelector("::after");
+          if (arrow) {
+            tooltip.style.setProperty("--arrow-left", "auto");
+            tooltip.style.setProperty("--arrow-right", "20px");
+            tooltip.style.setProperty("--arrow-transform", "none");
           }
+        }
 
-          // 画面の左端に近い場合
-          if (itemRect.left < 20) {
-            tooltip.style.left = "0";
-            tooltip.style.transform = "translateY(-5px)";
+        // 画面の左端に近い場合
+        if (itemRect.left < 20) {
+          tooltip.style.left = "0";
+          tooltip.style.transform = "translateY(-5px)";
 
-            // 矢印の位置も調整
-            const arrow = tooltip.querySelector("::after");
-            if (arrow) {
-              tooltip.style.setProperty("--arrow-left", "20px");
-              tooltip.style.setProperty("--arrow-right", "auto");
-              tooltip.style.setProperty("--arrow-transform", "none");
-            }
+          // 矢印の位置も調整
+          const arrow = tooltip.querySelector("::after");
+          if (arrow) {
+            tooltip.style.setProperty("--arrow-left", "20px");
+            tooltip.style.setProperty("--arrow-right", "auto");
+            tooltip.style.setProperty("--arrow-transform", "none");
           }
+        }
 
-          // 画面の上端に近い場合（モバイル以外）
-          if (window.innerWidth > 768 && itemRect.top < 100) {
-            tooltip.style.bottom = "auto";
-            tooltip.style.top = "100%";
-            tooltip.style.marginBottom = "0";
-            tooltip.style.marginTop = "8px";
+        // 画面の上端に近い場合（モバイル以外）
+        if (window.innerWidth > 768 && itemRect.top < 100) {
+          tooltip.style.bottom = "auto";
+          tooltip.style.top = "100%";
+          tooltip.style.marginBottom = "0";
+          tooltip.style.marginTop = "8px";
 
-            // 矢印の位置も調整（下向きから上向きに）
-            const arrow = tooltip.querySelector("::after");
-            if (arrow) {
-              tooltip.style.setProperty("--arrow-top", "auto");
-              tooltip.style.setProperty("--arrow-bottom", "100%");
-              tooltip.style.setProperty("--arrow-border-top", "transparent");
-              tooltip.style.setProperty(
-                "--arrow-border-bottom",
-                "rgba(0, 0, 0, 0.9)"
-              );
-            }
+          // 矢印の位置も調整（下向きから上向きに）
+          const arrow = tooltip.querySelector("::after");
+          if (arrow) {
+            tooltip.style.setProperty("--arrow-top", "auto");
+            tooltip.style.setProperty("--arrow-bottom", "100%");
+            tooltip.style.setProperty("--arrow-border-top", "transparent");
+            tooltip.style.setProperty(
+              "--arrow-border-bottom",
+              "rgba(0, 0, 0, 0.9)"
+            );
           }
+        }
+      });
+    }
+
+    // ページ読み込み時とリサイズ時に位置調整
+    window.addEventListener("load", adjustTooltipPosition);
+    window.addEventListener("resize", adjustTooltipPosition);
+
+    // ユーザー切り替え
+    async function switchUser(openId) {
+      try {
+        const response = await fetch("/api/switch-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ open_id: openId }),
         });
-      }
 
-      // ページ読み込み時とリサイズ時に位置調整
-      window.addEventListener("load", adjustTooltipPosition);
-      window.addEventListener("resize", adjustTooltipPosition);
+        if (response.ok) {
+          // ヘッダーのアクティブ状態を更新
+          updateHeaderActiveState(openId);
 
-      // ユーザー切り替え
-      async function switchUser(openId) {
-        try {
-          const response = await fetch("/api/switch-user", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ open_id: openId }),
-          });
-
-          if (response.ok) {
-            // ヘッダーのアクティブ状態を更新
-            updateHeaderActiveState(openId);
-
-            // ダッシュボードページの場合、コンテンツを更新
-            if (window.location.pathname === "/dashboard") {
-              // ユーザーデータを取得してコンテンツを更新
-              const userDataResponse = await fetch(
-                `/api/user-data?open_id=${openId}`
-              );
-              if (userDataResponse.ok) {
-                const userData = await userDataResponse.json();
-                if (typeof updateDashboardContent === "function") {
-                  updateDashboardContent(userData);
-                }
+          // ダッシュボードページの場合、コンテンツを更新
+          if (window.location.pathname === "/dashboard") {
+            // ユーザーデータを取得してコンテンツを更新
+            const userDataResponse = await fetch(
+              `/api/user-data?open_id=${openId}`
+            );
+            if (userDataResponse.ok) {
+              const userData = await userDataResponse.json();
+              if (typeof updateDashboardContent === "function") {
+                updateDashboardContent(userData);
               }
-            } else {
-              // ダッシュボードページでない場合はダッシュボードに移動
-              window.location.href = "/dashboard";
             }
           } else {
-            const data = await response.json();
-            alert("ユーザー切り替えに失敗しました: " + data.error);
+            // ダッシュボードページでない場合はダッシュボードに移動
+            window.location.href = "/dashboard";
           }
-        } catch (error) {
-          console.error("ユーザー切り替えエラー:", error);
-          alert("ユーザー切り替えに失敗しました");
+        } else {
+          const data = await response.json();
+          alert("ユーザー切り替えに失敗しました: " + data.error);
         }
+      } catch (error) {
+        console.error("ユーザー切り替えエラー:", error);
+        alert("ユーザー切り替えに失敗しました");
+      }
+    }
+
+    // ユーザー削除
+    async function removeUser(openId) {
+      if (!confirm("このユーザーを削除しますか？")) {
+        return;
       }
 
-      // ユーザー削除
-      async function removeUser(openId) {
-        if (!confirm("このユーザーを削除しますか？")) {
-          return;
-        }
-
-        try {
-          const response = await fetch("/api/remove-user", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ open_id: openId }),
-          });
-
-          if (response.ok) {
-            // ページをリロード
-            window.location.reload();
-          } else {
-            const data = await response.json();
-            alert("ユーザー削除に失敗しました: " + data.error);
-          }
-        } catch (error) {
-          console.error("ユーザー削除エラー:", error);
-          alert("ユーザー削除に失敗しました");
-        }
-      }
-
-      // 新しいユーザー追加
-      function addNewUser() {
-        window.location.href = "/login";
-      }
-
-      // ログアウト
-      function logout() {
-        if (confirm("ログアウトしますか？")) {
-          window.location.href = "/logout";
-        }
-      }
-
-      // ユーザーデータ取得（SPA用）
-      async function loadUserData(openId) {
-        try {
-          const response = await fetch(`/api/user-data?open_id=${openId}`);
-          if (response.ok) {
-            const data = await response.json();
-            return data;
-          } else {
-            throw new Error("データの取得に失敗しました");
-          }
-        } catch (error) {
-          console.error("ユーザーデータ取得エラー:", error);
-          throw error;
-        }
-      }
-
-      // ヘッダーのアクティブ状態を更新
-      function updateHeaderActiveState(openId) {
-        // すべてのユーザーアイテムからactiveクラスを削除
-        document.querySelectorAll(".user-item").forEach((item) => {
-          item.classList.remove("active");
+      try {
+        const response = await fetch("/api/remove-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ open_id: openId }),
         });
 
-        // 指定されたユーザーアイテムにactiveクラスを追加
-        const activeItem = document.querySelector(`[data-open-id="${openId}"]`);
-        if (activeItem) {
-          activeItem.classList.add("active");
+        if (response.ok) {
+          // ページをリロード
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert("ユーザー削除に失敗しました: " + data.error);
         }
-
-        // ツールチップの位置を再調整
-        setTimeout(adjustTooltipPosition, 100);
+      } catch (error) {
+        console.error("ユーザー削除エラー:", error);
+        alert("ユーザー削除に失敗しました");
       }
-    </script>
-    {% endif %} {% block extra_js %}{% endblock %}
-  </body>
+    }
+
+    // 新しいユーザー追加
+    function addNewUser() {
+      window.location.href = "/login";
+    }
+
+    // ログアウト
+    function logout() {
+      if (confirm("ログアウトしますか？")) {
+        window.location.href = "/logout";
+      }
+    }
+
+    // ユーザーデータ取得（SPA用）
+    async function loadUserData(openId) {
+      try {
+        const response = await fetch(`/api/user-data?open_id=${openId}`);
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        } else {
+          throw new Error("データの取得に失敗しました");
+        }
+      } catch (error) {
+        console.error("ユーザーデータ取得エラー:", error);
+        throw error;
+      }
+    }
+
+    // ヘッダーのアクティブ状態を更新
+    function updateHeaderActiveState(openId) {
+      // すべてのユーザーアイテムからactiveクラスを削除
+      document.querySelectorAll(".user-item").forEach((item) => {
+        item.classList.remove("active");
+      });
+
+      // 指定されたユーザーアイテムにactiveクラスを追加
+      const activeItem = document.querySelector(`[data-open-id="${openId}"]`);
+      if (activeItem) {
+        activeItem.classList.add("active");
+      }
+
+      // ツールチップの位置を再調整
+      setTimeout(adjustTooltipPosition, 100);
+    }
+  </script>
+  {% endif %} {% block extra_js %}{% endblock %}
+</body>
+
 </html>
