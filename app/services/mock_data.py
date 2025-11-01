@@ -1,6 +1,8 @@
 """モックデータ定義"""
 
 import json
+import os
+import base64
 from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
@@ -8,18 +10,40 @@ from pathlib import Path
 # モックデータディレクトリのパス
 MOCK_DATA_DIR = Path(__file__).parent.parent.parent / "mock_data"
 
-def load_json_file(filename: str) -> Optional[Dict[str, Any]]:
-    """JSONファイルを読み込む"""
-    filepath = MOCK_DATA_DIR / filename
-    if not filepath.exists():
+def load_json_from_env(env_var_name: str) -> Optional[Dict[str, Any]]:
+    """環境変数からBase64エンコードされたJSONを読み込む"""
+    encoded_data = os.getenv(env_var_name)
+    if not encoded_data:
         return None
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+        return json.loads(decoded_data)
     except Exception as e:
-        print(f"⚠️ モックデータ読み込みエラー ({filename}): {e}")
+        print(f"⚠️ 環境変数からの読み込みエラー ({env_var_name}): {e}")
         return None
+
+def load_json_file(filename: str) -> Optional[Dict[str, Any]]:
+    """JSONファイルを読み込む（ファイルが存在しない場合は環境変数から読み込む）"""
+    # まずファイルから読み込みを試行
+    filepath = MOCK_DATA_DIR / filename
+    if filepath.exists():
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"⚠️ モックデータ読み込みエラー ({filename}): {e}")
+
+    # ファイルが存在しない場合、環境変数から読み込む（Vercel用）
+    env_var_map = {
+        "user_profile.json": "USER_PROFILE_B64",
+        "video_list.json": "VIDEO_LIST_B64",
+    }
+
+    if filename in env_var_map:
+        return load_json_from_env(env_var_map[filename])
+
+    return None
 
 def get_mock_user_profile() -> Dict[str, Any]:
     """モックユーザープロフィールデータ（実際のAPIレスポンスから）"""
@@ -95,6 +119,20 @@ def get_mock_video_detail(video_id: str) -> Dict[str, Any]:
     data = load_json_file(specific_file)
     if data:
         return data
+
+    # 環境変数から読み込む（Vercel用）
+    video_details_json = os.getenv("VIDEO_DETAILS_B64")
+    if video_details_json:
+        try:
+            video_details = json.loads(video_details_json)
+            if video_id in video_details:
+                try:
+                    decoded_data = base64.b64decode(video_details[video_id]).decode('utf-8')
+                    return json.loads(decoded_data)
+                except Exception as e:
+                    print(f"⚠️ 動画詳細 {video_id} の復号エラー: {e}")
+        except Exception as e:
+            print(f"⚠️ VIDEO_DETAILS_B64 の解析エラー: {e}")
 
     # 汎用的なファイルを探す
     data = load_json_file("video_detail.json")
