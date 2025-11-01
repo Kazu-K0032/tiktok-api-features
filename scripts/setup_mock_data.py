@@ -68,11 +68,13 @@ def main():
         else:
             print("⚠️ 環境変数 VIDEO_DETAILS_B64 が見つかりません", file=sys.stderr)
 
-        print(f"\n✨ モックデータのセットアップが完了しました！ ({success_count} ファイル)", file=sys.stderr)
-
-        if success_count == 0:
-            print("⚠️ 警告: モックデータファイルが作成されませんでした。", file=sys.stderr)
-            print("   環境変数が正しく設定されているか確認してください。", file=sys.stderr)
+        # ファイルが作成された場合のみ成功メッセージを表示
+        if success_count > 0:
+            print(f"\n✨ モックデータのセットアップが完了しました！ ({success_count} ファイル)", file=sys.stderr)
+        else:
+            print(f"\n⚠️ モックデータファイルが作成されませんでした（{success_count} ファイル）", file=sys.stderr)
+            print("   環境変数（USER_PROFILE_B64, VIDEO_LIST_B64, VIDEO_DETAILS_B64）が正しく設定されているか確認してください。", file=sys.stderr)
+            print("   これは通常、ローカル開発環境では正常な動作です。", file=sys.stderr)
 
     except Exception as e:
         print(f"❌ 致命的なエラー: {e}", file=sys.stderr)
