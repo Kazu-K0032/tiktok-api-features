@@ -1,6 +1,6 @@
 import logging
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from app.config import Config
 from app.views import Views
 from app.utils import setup_logging, cleanup_caches
@@ -160,6 +160,80 @@ def create_app():
         @app.route("/favicon.ico")
         def favicon():
             return app.send_static_file("images/favicon.svg")
+
+        # デバッグ用エンドポイント（モックデータの状態確認）
+        @app.route("/debug/mock-data")
+        def debug_mock_data():
+            """モックデータのデバッグ情報を返す"""
+            import os
+            from pathlib import Path
+            from app.services.mock_data import MOCK_DATA_DIR
+
+            debug_info = {
+                "IS_DEPLOY_SITE": os.getenv("IS_DEPLOY_SITE", "false"),
+                "IS_DEPLOY_SITE_bool": Config.IS_DEPLOY_SITE,
+                "mock_data_setup_done": _mock_data_setup_done,
+                "mock_data_dir": str(MOCK_DATA_DIR),
+                "mock_data_dir_exists": MOCK_DATA_DIR.exists(),
+            }
+
+            # 環境変数の状態
+            env_vars = {
+                "USER_PROFILE_B64_exists": bool(os.getenv("USER_PROFILE_B64")),
+                "USER_PROFILE_B64_length": len(os.getenv("USER_PROFILE_B64", "")) if os.getenv("USER_PROFILE_B64") else 0,
+                "VIDEO_LIST_B64_exists": bool(os.getenv("VIDEO_LIST_B64")),
+                "VIDEO_LIST_B64_length": len(os.getenv("VIDEO_LIST_B64", "")) if os.getenv("VIDEO_LIST_B64") else 0,
+                "VIDEO_DETAILS_B64_exists": bool(os.getenv("VIDEO_DETAILS_B64")),
+                "VIDEO_DETAILS_B64_length": len(os.getenv("VIDEO_DETAILS_B64", "")) if os.getenv("VIDEO_DETAILS_B64") else 0,
+            }
+            debug_info["env_vars"] = env_vars
+
+            # モックデータファイルの状態
+            files_info = {}
+            if MOCK_DATA_DIR.exists():
+                for file_path in MOCK_DATA_DIR.glob("*.json"):
+                    try:
+                        size = file_path.stat().st_size
+                        files_info[file_path.name] = {
+                            "exists": True,
+                            "size": size,
+                            "path": str(file_path)
+                        }
+                    except Exception as e:
+                        files_info[file_path.name] = {
+                            "exists": True,
+                            "error": str(e)
+                        }
+            else:
+                files_info["error"] = "Directory does not exist"
+
+            debug_info["mock_data_files"] = files_info
+
+            # モックデータの読み込みテスト
+            try:
+                from app.services.mock_data import get_mock_user_profile, get_mock_video_list
+                profile_test = get_mock_user_profile()
+                video_list_test = get_mock_video_list()
+                debug_info["mock_data_test"] = {
+                    "profile_loaded": bool(profile_test),
+                    "profile_open_id": profile_test.get("open_id") if profile_test else None,
+                    "video_list_loaded": bool(video_list_test),
+                    "video_count": len(video_list_test.get("data", {}).get("videos", [])) if video_list_test else 0,
+                }
+            except Exception as e:
+                debug_info["mock_data_test"] = {
+                    "error": str(e),
+                    "traceback": __import__("traceback").format_exc()
+                }
+
+            # セットアップスクリプトの状態
+            script_path = Path(__file__).parent / "scripts" / "setup_mock_data.py"
+            debug_info["setup_script"] = {
+                "exists": script_path.exists(),
+                "path": str(script_path)
+            }
+
+            return jsonify(debug_info)
 
         return app
 
