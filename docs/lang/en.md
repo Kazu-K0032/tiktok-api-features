@@ -131,7 +131,7 @@ cp env.example .env
 #### 5. Run the Application
 
 ```bash
-python app.py
+python main.py
 ```
 
 #### 6. Access via Browser
