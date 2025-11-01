@@ -6,5 +6,11 @@ endblock %} {% block content %}
     TikTokアカウントにログインして、プロフィール情報と投稿動画を確認できます
   </p>
   <a href="{{ url_for('login') }}" class="btn">▶ TikTok でログイン</a>
+  {% if is_mock_mode %}
+  <p
+    style="color: #ff6b35; margin-top: 20px; font-size: 14px; padding: 10px; background-color: #fff3f0; border-left: 4px solid #ff6b35; border-radius: 4px;">
+    📌 <strong>モックモード</strong>: 現在、モックデータを使用して表示しています
+  </p>
+  {% endif %}
 </div>
 {% endblock %}

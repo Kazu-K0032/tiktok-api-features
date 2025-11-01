@@ -1,23 +1,24 @@
 {% extends "base.html" %} {% block title %}ダッシュボード{% endblock %} {% block
 extra_css %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/dashboard.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
 {% endblock %} {% block content %}
 <div id="dashboard-content">
+  {% if is_mock_mode %}
+  <div
+    style="background-color: #fff3f0; border-left: 4px solid #ff6b35; padding: 12px 16px; margin-bottom: 24px; border-radius: 4px; display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 20px;">📌</span>
+    <div>
+      <strong style="color: #ff6b35; font-size: 14px;">モックモード</strong>
+      <p style="color: #666; margin: 4px 0 0 0; font-size: 13px;">現在、モックデータを使用して表示しています</p>
+    </div>
+  </div>
+  {% endif %}
   <h1>ユーザープロフィール</h1>
   <div class="card">
     <div class="profile-container">
       <div>
-        <img
-          src="{{ profile.avatar_url or '' }}"
-          alt="アバター"
-          class="profile-avatar"
-          loading="lazy"
-          onerror="this.style.display='none'"
-          id="profile-avatar"
-        />
+        <img src="{{ profile.avatar_url or '' }}" alt="アバター" class="profile-avatar" loading="lazy"
+          onerror="this.style.display='none'" id="profile-avatar" />
       </div>
       <div>
         <h2 class="profile-name" id="profile-name">
@@ -110,12 +111,7 @@ extra_css %}
       <div class="video-card">
         {% if v.best_image_url %}
         <div class="video-thumbnail">
-          <img
-            src="{{ v.best_image_url }}"
-            alt="サムネイル"
-            class="video-cover"
-            loading="lazy"
-          />
+          <img src="{{ v.best_image_url }}" alt="サムネイル" class="video-cover" loading="lazy" />
         </div>
         {% endif %}
         <h3 class="video-title">{{ v.title or 'タイトルなし' }}</h3>
@@ -141,11 +137,7 @@ extra_css %}
             <div class="video-stat-label">コメント</div>
           </div>
         </div>
-        <a
-          href="{{ url_for('video_detail', video_id=v.id) }}"
-          class="btn btn-small"
-          >詳細を見る</a
-        >
+        <a href="{{ url_for('video_detail', video_id=v.id) }}" class="btn btn-small">詳細を見る</a>
       </div>
       {% endfor %} {% else %}
       <div class="card empty-state">

@@ -24,10 +24,42 @@ class Views:
 
     def index(self):
         """ホームページ"""
-        # 認証済みの場合はダッシュボードにリダイレクト
+        # モックモードの場合は直接ダッシュボードにリダイレクト
+        if self.config.IS_DEPLOY_SITE:
+            # モックモードの場合、ダミーユーザーをセッションに設定
+            from app.services.user_manager import UserManager
+            user_manager = UserManager()
+
+            # モックユーザーデータを取得
+            from app.services.mock_data import get_mock_user_profile
+            mock_profile = get_mock_user_profile()
+
+            # ダミーユーザーをセッションに設定
+            if 'users' not in session:
+                session['users'] = []
+
+            # 既にモックユーザーが設定されていないかチェック
+            mock_user_exists = any(user.get('open_id') == mock_profile.get('open_id')
+                                  for user in session.get('users', []))
+
+            if not mock_user_exists:
+                mock_user = {
+                    'open_id': mock_profile.get('open_id', 'mock_user_123'),
+                    'access_token': 'mock_access_token',
+                    'display_name': mock_profile.get('display_name', 'モックユーザー'),
+                    'username': mock_profile.get('username', 'mock_user'),
+                    'avatar_url': mock_profile.get('avatar_url', ''),
+                }
+                session['users'].append(mock_user)
+                session['current_user_open_id'] = mock_user['open_id']
+                session.modified = True
+
+            return redirect(url_for("dashboard"))
+
+        # 通常モード: 認証済みの場合はダッシュボードにリダイレクト
         if self.auth_service.is_authenticated():
             return redirect(url_for("dashboard"))
-        return render_template('index.html')
+        return render_template('index.html', is_mock_mode=False)
 
     def login(self):
         """ログイン処理開始"""
@@ -62,33 +94,59 @@ class Views:
         session.permanent = True
         session.modified = True
 
-        # 認証チェック
-        if not self.auth_service.is_authenticated():
-            self.logger.warning("認証されていません")
-            return redirect(url_for("index"))
+        # モックモードの場合は認証チェックをスキップ
+        if self.config.IS_DEPLOY_SITE:
+            # モックモードの場合、セッションにユーザーがなければ設定
+            if 'users' not in session or not session.get('users'):
+                from app.services.mock_data import get_mock_user_profile
+                mock_profile = get_mock_user_profile()
+                mock_user = {
+                    'open_id': mock_profile.get('open_id', 'mock_user_123'),
+                    'access_token': 'mock_access_token',
+                    'display_name': mock_profile.get('display_name', 'モックユーザー'),
+                    'username': mock_profile.get('username', 'mock_user'),
+                    'avatar_url': mock_profile.get('avatar_url', ''),
+                }
+                session['users'] = [mock_user]
+                session['current_user_open_id'] = mock_user['open_id']
+                session.modified = True
 
-        # 古いユーザーデータを更新
-        self.user_manager.update_all_legacy_users()
+            # 古いユーザーデータを更新
+            self.user_manager.update_all_legacy_users()
 
-        # 現在のユーザーを取得
-        current_user = self.user_manager.get_current_user()
-        if not current_user:
-            self.logger.warning("現在のユーザーが見つかりません")
-            return redirect(url_for("index"))
+            # 現在のユーザーを取得
+            current_user = self.user_manager.get_current_user()
+            if not current_user:
+                self.logger.warning("現在のユーザーが見つかりません")
+                return redirect(url_for("index"))
 
-        token = current_user["access_token"]
-        open_id = current_user["open_id"]
+            token = current_user["access_token"]
+            open_id = current_user["open_id"]
+            # モックモードではトークン検証をスキップ
+        else:
+            # 通常モード: 認証チェック
+            if not self.auth_service.is_authenticated():
+                self.logger.warning("認証されていません")
+                return redirect(url_for("index"))
 
-                    # ダッシュボード - トークン発見
+            # 古いユーザーデータを更新
+            self.user_manager.update_all_legacy_users()
 
-        # トークンの有効性チェック
-        if not validate_token(token):
-            self.logger.warning(f"無効なアクセストークン形式: {token[:20] if token else 'None'}...")
-            # 無効なユーザーを削除
-            self.user_manager.remove_user(open_id)
-            return redirect(url_for("index"))
+            # 現在のユーザーを取得
+            current_user = self.user_manager.get_current_user()
+            if not current_user:
+                self.logger.warning("現在のユーザーが見つかりません")
+                return redirect(url_for("index"))
 
-                    # トークン検証成功
+            token = current_user["access_token"]
+            open_id = current_user["open_id"]
+
+            # トークンの有効性チェック
+            if not validate_token(token):
+                self.logger.warning(f"無効なアクセストークン形式: {token[:20] if token else 'None'}...")
+                # 無効なユーザーを削除
+                self.user_manager.remove_user(open_id)
+                return redirect(url_for("index"))
 
         try:
             # プロフィール情報と統計情報を一度に取得
@@ -129,7 +187,8 @@ class Views:
                                  current_user=current_user,
                                  total_share_count=total_share_count,
                                  total_view_count=total_view_count,
-                                 avg_engagement_rate=avg_engagement_rate)
+                                 avg_engagement_rate=avg_engagement_rate,
+                                 is_mock_mode=self.config.IS_DEPLOY_SITE)
 
         except requests.exceptions.HTTPError as e:
             # 401エラー（認証エラー）の場合は特別に処理
