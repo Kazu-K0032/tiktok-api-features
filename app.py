@@ -11,22 +11,27 @@ def setup_mock_data_if_needed():
     if os.getenv("IS_DEPLOY_SITE", "false").lower() == "true":
         try:
             from pathlib import Path
-            import subprocess
+            import sys
+            import importlib.util
 
+            # subprocessの代わりに直接インポートして実行
             script_path = Path(__file__).parent / "scripts" / "setup_mock_data.py"
             if script_path.exists():
-                result = subprocess.run(
-                    ["python", str(script_path)],
-                    capture_output=True,
-                    text=True,
-                    timeout=30
-                )
-                if result.returncode == 0:
+                # スクリプトを直接実行
+                spec = importlib.util.spec_from_file_location("setup_mock_data", str(script_path))
+                module = importlib.util.module_from_spec(spec)
+                sys.modules["setup_mock_data"] = module
+                spec.loader.exec_module(module)
+
+                # main関数を実行
+                if hasattr(module, 'main'):
+                    module.main()
                     logging.info("モックデータのセットアップが完了しました")
-                else:
-                    logging.warning(f"モックデータのセットアップで警告: {result.stderr}")
         except Exception as e:
             logging.warning(f"モックデータのセットアップスキップ: {e}")
+            # エラーをログに出力して継続
+            import traceback
+            logging.error(traceback.format_exc())
 
 def create_app():
     """Flaskアプリケーションを作成"""
@@ -113,6 +118,10 @@ def create_app():
 
     return app
 
+# Vercel用にapp変数をエクスポート（重要！）
+app = create_app()
+
+# ローカル実行用
 if __name__ == "__main__":
     # source venv/bin/activate
     # python app.py
@@ -121,8 +130,6 @@ if __name__ == "__main__":
 
     # 環境変数を読み込み
     load_dotenv()
-
-    app = create_app()
 
     # ポートを取得
     port = get_app_port()
