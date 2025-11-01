@@ -50,3 +50,8 @@ flask_session/
 
 # tmp
 tmp/
+
+# モックデータ（実際のAPIレスポンスを含む可能性があるため）
+# 必要に応じて手動でコミットしてください
+mock_data/*.json
+!mock_data/.gitkeep

@@ -12,6 +12,9 @@ class Config:
     TIKTOK_CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET")
     STATE = "tokentest"
 
+    # デプロイサイト設定
+    IS_DEPLOY_SITE = os.getenv("IS_DEPLOY_SITE", "false").lower() == "true"
+
     # TikTok API設定
     TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize"
     TIKTOK_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
