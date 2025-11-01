@@ -137,7 +137,7 @@ cp env.example .env
 #### 5. アプリケーションの実行
 
 ```bash
-python app.py
+python main.py
 ```
 
 #### 6. ブラウザでアクセス

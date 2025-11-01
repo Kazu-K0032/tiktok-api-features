@@ -77,7 +77,7 @@ git push origin main
 
 ## 動作の仕組み
 
-1. **アプリケーション起動時**: `app.py`の`create_app()`関数が呼ばれる
+1. **アプリケーション起動時**: `main.py`の`create_app()`関数が呼ばれる
 2. **モックデータセットアップ**: `IS_DEPLOY_SITE=true`の場合、`setup_mock_data.py`が自動実行される
 3. **環境変数から復号**: Base64 エンコードされたデータを復号して`mock_data/`ディレクトリに保存
 4. **モックモード有効化**: `IS_DEPLOY_SITE=true`により、API リクエストがモックデータを使用
@@ -129,7 +129,7 @@ tiktok-api-features/
 │   ├── encode_mock_data.py      # モックデータをBase64エンコード
 │   └── setup_mock_data.py       # 環境変数からモックデータを復号
 ├── mock_data/                   # モックデータディレクトリ（Git除外）
-├── app.py                       # アプリケーション（自動セットアップ機能付き）
+├── main.py                      # アプリケーション（自動セットアップ機能付き）
 ├── vercel.json                  # Vercel設定
 └── DEPLOY.md                    # このドキュメント
 ```

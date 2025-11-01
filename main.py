@@ -180,7 +180,7 @@ app = create_app()
 # ローカル実行用
 if __name__ == "__main__":
     # source venv/bin/activate
-    # python app.py
+    # python main.py
     from dotenv import load_dotenv
     from app.utils import get_app_port
     import os
