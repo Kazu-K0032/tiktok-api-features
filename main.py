@@ -144,6 +144,10 @@ def create_app():
         def debug_session():
             return views.debug_session()
 
+        @app.route("/debug/snapshot-mock-data")
+        def debug_snapshot_mock_data():
+            return views.debug_snapshot_mock_data()
+
         @app.route("/upload")
         def video_upload():
             return views.video_upload()

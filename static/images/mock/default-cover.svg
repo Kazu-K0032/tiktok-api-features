@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
+  <rect width="640" height="360" fill="#1f1f1f"/>
+  <g fill="#666" font-family="Helvetica, Arial, sans-serif" text-anchor="middle">
+    <path d="M295 150 l60 30 -60 30 z" fill="#888"/>
+    <text x="320" y="240" font-size="20" letter-spacing="2">NO COVER</text>
+  </g>
+</svg>

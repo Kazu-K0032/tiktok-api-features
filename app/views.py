@@ -439,6 +439,38 @@ class Views:
             'session_config': session_config
         })
 
+    def debug_snapshot_mock_data(self):
+        """ログイン中ユーザーのトークンで実APIを叩き、モックデータ一式（JSON+画像）を保存する。
+
+        ローカル開発専用。本番（IS_DEPLOY_SITE=true）では無効化。
+        """
+        if self.config.IS_DEPLOY_SITE:
+            return jsonify({'error': 'IS_DEPLOY_SITE=true では利用できません'}), 403
+
+        if not self.auth_service.is_authenticated():
+            return jsonify({'error': '認証されていません。先に / でログインしてください'}), 401
+
+        current_user = self.user_manager.get_current_user()
+        if not current_user or not current_user.get('access_token'):
+            return jsonify({'error': '現在のユーザーが見つかりません'}), 401
+
+        try:
+            max_videos = int(request.args.get('max_videos', 100))
+        except (TypeError, ValueError):
+            max_videos = 100
+
+        try:
+            from app.services.mock_data_snapshot import snapshot_mock_data
+            summary = snapshot_mock_data(
+                access_token=current_user['access_token'],
+                max_videos=max_videos,
+                log=lambda m: self.logger.info(f"[snapshot] {m}"),
+            )
+            return jsonify({'success': summary.get('ok', False), 'summary': summary})
+        except Exception as e:
+            self.logger.error(f"snapshot 実行エラー: {e}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
     def video_upload(self):
         """動画アップロードページ表示"""
         # 認証チェック

@@ -57,7 +57,7 @@ def get_mock_user_profile() -> Dict[str, Any]:
         "open_id": "mock_user_123",
         "display_name": "モックユーザー",
         "username": "mock_user",
-        "avatar_url": "https://via.placeholder.com/150",
+        "avatar_url": "/static/images/default-avatar.svg",
         "bio_description": "これはモックデータです",
         "profile_web_link": "https://www.tiktok.com/@mock_user",
         "profile_deep_link": "snssdk1234://user/profile?user_id=mock_user",
@@ -89,7 +89,7 @@ def get_mock_video_list() -> Dict[str, Any]:
                     "comment_count": 50,
                     "share_count": 20,
                     "embed_link": "https://www.tiktok.com/embed/mock_video_1",
-                    "cover_image_url": "https://via.placeholder.com/640x360",
+                    "cover_image_url": "/static/images/mock/default-cover.svg",
                     "create_time": current_time - 86400,
                     "height": 720,
                     "width": 1280
@@ -103,7 +103,7 @@ def get_mock_video_list() -> Dict[str, Any]:
                     "comment_count": 30,
                     "share_count": 10,
                     "embed_link": "https://www.tiktok.com/embed/mock_video_2",
-                    "cover_image_url": "https://via.placeholder.com/640x360",
+                    "cover_image_url": "/static/images/mock/default-cover.svg",
                     "create_time": current_time - 172800,
                     "height": 1080,
                     "width": 1920
@@ -157,7 +157,7 @@ def get_mock_video_detail(video_id: str) -> Dict[str, Any]:
                             "comment_count": video.get("comment_count", 0),
                             "share_count": video.get("share_count", 0),
                             "embed_link": video.get("embed_link", f"https://www.tiktok.com/embed/{video_id}"),
-                            "cover_image_url": video.get("cover_image_url", "https://via.placeholder.com/640x360"),
+                            "cover_image_url": video.get("cover_image_url", "/static/images/mock/default-cover.svg"),
                             "create_time": video.get("create_time", current_time - 86400),
                             "height": video.get("height", 720),
                             "width": video.get("width", 1280)
@@ -187,7 +187,7 @@ def get_mock_video_detail(video_id: str) -> Dict[str, Any]:
                     "comment_count": 75,
                     "share_count": 30,
                     "embed_link": f"https://www.tiktok.com/embed/{video_id}",
-                    "cover_image_url": "https://via.placeholder.com/640x360",
+                    "cover_image_url": "/static/images/mock/default-cover.svg",
                     "create_time": current_time - 86400,
                     "height": 720,
                     "width": 1280
